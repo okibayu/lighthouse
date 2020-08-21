@@ -30,7 +30,7 @@ function createSWArtifact(swOpts) {
       status: sw.status,
       scriptURL: sw.scriptURL,
     });
-
+    
     const scopeURL = sw.scopeURL || getBaseDirectory(sw.scriptURL);
     assert.ok(scopeURL.endsWith('/')); // required by SW spec.
 

@@ -77,11 +77,6 @@ class ServiceWorker extends Audit {
    */
   static getControllingScopeUrl(matchingSWVersions, registrations, pageUrl) {
     // Find the normalized scope URLs of possibly-controlling SWs.
-
-    // temp variable could use in different implementation
-    const matchingScriptURLs = [];
-
-    ///** @type {{ scopeURL: string; scriptURL: string; }[]} */
     let serviceWorkerUrls = new Map();
 
     // Populate serviceWorkerUrls map with the scriptURLs and scopeUrls of matchingSWVersions and registrations
