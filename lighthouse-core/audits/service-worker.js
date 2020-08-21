@@ -95,7 +95,7 @@ class ServiceWorker extends Audit {
     });
 
     // Find most-specific applicable scope, the one controlling the page.
-    // See https://w3c.github.io/ServiceWorker/v1/#scope-match-algorithm\
+    // See https://w3c.github.io/ServiceWorker/v1/#scope-match-algorithm
     const pageControllingUrls = [...serviceWorkerUrls]
       /* converts map to array, to properly filer and sort according to scopeUrl */
       .filter(urlPair => pageUrl.href.startsWith(urlPair[0].toString()))
