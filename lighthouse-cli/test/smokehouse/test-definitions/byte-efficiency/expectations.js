@@ -147,7 +147,7 @@ const expectations = [
             // the specific ms value here is not meaningful for this smoketest
             // *some* savings should be reported
             overallSavingsMs: '>0',
-            overallSavingsBytes: '>=25000',
+            overallSavingsBytes: '35000 +/- 1000',
             items: [
               {
                 url: 'http://localhost:10200/byte-efficiency/script.js',

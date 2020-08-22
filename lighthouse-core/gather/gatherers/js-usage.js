@@ -35,6 +35,10 @@ class JsUsage extends Gatherer {
     /** @type {Record<string, Array<LH.Crdp.Profiler.ScriptCoverage>>} */
     const usageByUrl = {};
     for (const scriptUsage of scriptUsages) {
+      // ScriptCoverages without a URL are from code we run over the protocol.
+      // We shouldn't analyze ourselves, so skip.
+      if (scriptUsage.url === '') continue;
+
       // `scriptUsage.url` can sometimes be relative to the final url, so normalize to an absolute
       // url by using the URL ctor.
       const url = new URL(scriptUsage.url, finalUrl).href;
