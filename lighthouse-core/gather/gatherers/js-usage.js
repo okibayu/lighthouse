@@ -25,6 +25,7 @@ class JsUsage extends Gatherer {
    */
   async afterPass(passContext) {
     const driver = passContext.driver;
+    const finalUrl = passContext.baseArtifacts.URL.finalUrl;
 
     const coverageResponse = await driver.sendCommand('Profiler.takePreciseCoverage');
     const scriptUsages = coverageResponse.result;
@@ -34,9 +35,12 @@ class JsUsage extends Gatherer {
     /** @type {Record<string, Array<LH.Crdp.Profiler.ScriptCoverage>>} */
     const usageByUrl = {};
     for (const scriptUsage of scriptUsages) {
-      const scripts = usageByUrl[scriptUsage.url] || [];
+      // `scriptUsage.url` can sometimes be relative to the final url, so normalize to an absolute
+      // url by using the URL ctor.
+      const url = new URL(scriptUsage.url, finalUrl).href;
+      const scripts = usageByUrl[url] || [];
       scripts.push(scriptUsage);
-      usageByUrl[scriptUsage.url] = scripts;
+      usageByUrl[url] = scripts;
     }
 
     return usageByUrl;
