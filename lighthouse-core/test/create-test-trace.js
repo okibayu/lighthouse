@@ -121,15 +121,19 @@ function createTestTrace(options) {
     ph: 'R',
     cat: 'loading,rail,devtools.timeline',
     args: {frame},
-  }, {
-    name: 'largestContentfulPaint::Candidate',
-    ts: options.largestContentfulPaint || (timeOrigin + 15),
-    pid,
-    tid,
-    ph: 'R',
-    cat: 'loading,rail,devtools.timeline',
-    args: {frame},
   }];
+
+  if (options.largestContentfulPaint) {
+    traceEvents.push({
+      name: 'largestContentfulPaint::Candidate',
+      ts: options.largestContentfulPaint,
+      pid,
+      tid,
+      ph: 'R',
+      cat: 'loading,rail,devtools.timeline',
+      args: {frame},
+    });
+  }
 
   if (options.topLevelTasks) {
     for (const task of options.topLevelTasks) {
