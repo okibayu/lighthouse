@@ -15,9 +15,7 @@ const createTestTrace = require('../create-test-trace.js');
 
 const mainResource = {
   url: 'https://www.example.com/',
-  parsedURL: {
-    securityOrigin: 'https://www.example.com',
-  },
+  timing: {receiveHeadersEnd: 0.5},
   endTime: 1,
 };
 
@@ -261,13 +259,26 @@ describe('Performance: uses-rel-preconnect audit', () => {
     const networkRecords = [
       mainResource,
       {
-        url: 'http://cdn.example.com/first',
+        url: 'https://cdn1.example.com/first',
         initiator: {},
         startTime: 2,
         timing: {
           dnsStart: 100,
+          dnsEnd: 100,
           connectStart: 250,
-          connectEnd: 300,
+          connectEnd: 250,
+          receiveHeadersEnd: 2.3,
+        },
+      },
+      {
+        url: 'https://cdn2.example.com/first',
+        initiator: {},
+        startTime: 2,
+        timing: {
+          dnsStart: 100,
+          dnsEnd: 100,
+          connectStart: 250,
+          connectEnd: 250,
           receiveHeadersEnd: 2.3,
         },
       },
@@ -288,19 +299,19 @@ describe('Performance: uses-rel-preconnect audit', () => {
   });
 
   it('should pass with a warning if too many preconnects found', async () => {
+    const timing = {
+      dnsStart: 100,
+      dnsEnd: 100,
+      connectStart: 250,
+      connectEnd: 250,
+      receiveHeadersEnd: 2.1,
+    };
+
     const networkRecords = [
       mainResource,
-      {
-        url: 'http://cdn.example.com/first',
-        initiator: {},
-        startTime: 2,
-        timing: {
-          dnsStart: 100,
-          connectStart: 250,
-          connectEnd: 300,
-          receiveHeadersEnd: 2.3,
-        },
-      },
+      {url: 'https://cdn1.example.com/first', initiator: {}, startTime: 2, timing},
+      {url: 'https://cdn2.example.com/first', initiator: {}, startTime: 2, timing},
+      {url: 'https://cdn3.example.com/first', initiator: {}, startTime: 2, timing},
     ];
 
     const artifacts = {
@@ -309,6 +320,20 @@ describe('Performance: uses-rel-preconnect audit', () => {
         {rel: 'preconnect', href: 'https://cdn1.example.com/'},
         {rel: 'preconnect', href: 'https://cdn2.example.com/'},
         {rel: 'preconnect', href: 'https://cdn3.example.com/'},
+      ],
+    };
+
+    const context = {settings: {}, computedCache: new Map()};
+    const result = await UsesRelPreconnect.audit(artifacts, context);
+    assert.equal(result.score, 1);
+    assert.equal(result.warnings.length, 1);
+  });
+
+  it('should pass with a warning if the page preconnects to an origin that isnt used', async () => {
+    const artifacts = {
+      ...buildArtifacts([mainResource]),
+      LinkElements: [
+        {rel: 'preconnect', href: 'https://definitely-not-used.example.com/'},
       ],
     };
 
