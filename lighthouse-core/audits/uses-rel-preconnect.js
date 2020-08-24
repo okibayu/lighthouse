@@ -13,6 +13,9 @@ const i18n = require('../lib/i18n/i18n.js');
 const NetworkRecords = require('../computed/network-records.js');
 const MainResource = require('../computed/main-resource.js');
 const LoadSimulator = require('../computed/load-simulator.js');
+const TraceOfTab = require('../computed/trace-of-tab.js');
+const PageDependencyGraph = require('../computed/page-dependency-graph.js');
+const LanternLCP = require('../computed/metrics/lantern-largest-contentful-paint.js');
 
 // Preconnect establishes a "clean" socket. Chrome's socket manager will keep an unused socket
 // around for 10s. Meaning, the time delta between processing preconnect a request should be <10s,
@@ -51,7 +54,7 @@ class UsesRelPreconnectAudit extends Audit {
       id: 'uses-rel-preconnect',
       title: str_(UIStrings.title),
       description: str_(UIStrings.description),
-      requiredArtifacts: ['devtoolsLogs', 'URL', 'LinkElements'],
+      requiredArtifacts: ['traces', 'devtoolsLogs', 'URL', 'LinkElements'],
       scoreDisplayMode: Audit.SCORING_MODES.NUMERIC,
     };
   }
@@ -94,36 +97,48 @@ class UsesRelPreconnectAudit extends Audit {
    * @return {Promise<LH.Audit.Product>}
    */
   static async audit(artifacts, context) {
+    const trace = artifacts.traces[UsesRelPreconnectAudit.DEFAULT_PASS];
     const devtoolsLog = artifacts.devtoolsLogs[UsesRelPreconnectAudit.DEFAULT_PASS];
     const settings = context.settings;
+
     let maxWasted = 0;
     /** @type {string[]} */
     const warnings = [];
 
-    const [networkRecords, mainResource, loadSimulator] = await Promise.all([
+    const [networkRecords, mainResource, loadSimulator, traceOfTab, pageGraph] = await Promise.all([
       NetworkRecords.request(devtoolsLog, context),
       MainResource.request({devtoolsLog, URL: artifacts.URL}, context),
       LoadSimulator.request({devtoolsLog, settings}, context),
+      TraceOfTab.request(trace, context),
+      PageDependencyGraph.request({trace, devtoolsLog}, context),
     ]);
 
     const {rtt, additionalRttByOrigin} = loadSimulator.getOptions();
+    const lcpGraph = await LanternLCP.getPessimisticGraph(pageGraph, traceOfTab);
+    /** @type {Set<string>} */
+    const lcpGraphURLs = new Set();
+    lcpGraph.traverse(node => {
+      if (node.type === 'network' ) lcpGraphURLs.add(node.record.url);
+    });
 
     /** @type {Map<string, LH.Artifacts.NetworkRequest[]>}  */
     const origins = new Map();
     networkRecords
       .forEach(record => {
         if (
-          // filter out all resources where timing info was invalid
+          // Filter out all resources where timing info was invalid.
           !UsesRelPreconnectAudit.hasValidTiming(record) ||
-          // filter out all resources that are loaded by the document
+          // Filter out all resources that are loaded by the document. Connections are already early.
           record.initiator.url === mainResource.url ||
-          // filter out urls that do not have an origin (data, ...)
+          // Filter out urls that do not have an origin (data, file, etc).
           !record.parsedURL || !record.parsedURL.securityOrigin ||
-          // filter out all resources that have the same origin
+          // Filter out all resources that have the same origin. We're already connected.
           mainResource.parsedURL.securityOrigin === record.parsedURL.securityOrigin ||
-          // filter out all resources where origins are already resolved
+          // Filter out anything that wasn't part of LCP. Only recommend important origins.
+          !lcpGraphURLs.has(record.url) ||
+          // Filter out all resources where origins are already resolved.
           UsesRelPreconnectAudit.hasAlreadyConnectedToOrigin(record) ||
-          // make sure the requests are below the PRECONNECT_SOCKET_MAX_IDLE (15s) mark
+          // Make sure the requests are below the PRECONNECT_SOCKET_MAX_IDLE (15s) mark.
           !UsesRelPreconnectAudit.socketStartTimeIsBelowThreshold(record, mainResource)
         ) {
           return;
