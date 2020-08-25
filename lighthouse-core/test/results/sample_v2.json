@@ -6961,15 +6961,6 @@
           "path": "audits[non-composited-animations].details.items[0].subItems.items[2].failureReason"
         }
       ],
-      "lighthouse-core/lib/i18n/i18n.js | columnFailingElem": [
-        "audits[color-contrast].details.headings[0].text",
-        "audits[html-has-lang].details.headings[0].text",
-        "audits[image-alt].details.headings[0].text",
-        "audits.label.details.headings[0].text",
-        "audits[link-name].details.headings[0].text",
-        "audits[object-alt].details.headings[0].text",
-        "audits[password-inputs-can-be-pasted-into].details.headings[0].text"
-      ],
       "lighthouse-core/audits/large-javascript-libraries.js | title": [
         "audits[large-javascript-libraries].title"
       ],
