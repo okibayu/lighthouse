@@ -166,6 +166,7 @@ Object {
       "path": "non-composited-animations",
     },
     Object {
+<<<<<<< HEAD
       "path": "unsized-images",
     },
     Object {
@@ -175,6 +176,8 @@ Object {
       "path": "valid-source-maps",
     },
     Object {
+=======
+>>>>>>> parent of 97a2375be... core(config): unsized-images to default (#11217)
       "path": "manual/pwa-cross-browser",
     },
     Object {
@@ -1024,6 +1027,7 @@ Object {
           "weight": 0,
         },
         Object {
+<<<<<<< HEAD
           "group": "diagnostics",
           "id": "unsized-images",
           "weight": 0,
@@ -1034,6 +1038,8 @@ Object {
           "weight": 0,
         },
         Object {
+=======
+>>>>>>> parent of 97a2375be... core(config): unsized-images to default (#11217)
           "id": "network-requests",
           "weight": 0,
         },
