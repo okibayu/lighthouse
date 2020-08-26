@@ -160,13 +160,13 @@ class Driver {
   }
 
   /**
-   * Computes the ULTRADUMB™ benchmark index to get a rough estimate of device class.
+   * Computes the benchmark index to get a rough estimate of device class.
    * @return {Promise<number>}
    */
   async getBenchmarkIndex() {
     const status = {msg: 'Benchmarking machine', id: 'lh:gather:getBenchmarkIndex'};
     log.time(status);
-    const indexVal = await this.evaluateAsync(`(${pageFunctions.ultradumbBenchmarkString})()`);
+    const indexVal = await this.evaluateAsync(`(${pageFunctions.computeBenchmarkIndexString})()`);
     log.timeEnd(status);
     return indexVal;
   }
@@ -1202,19 +1202,6 @@ class Driver {
       return null;
     }
     return new LHElement(targetNode, this);
-  }
-
-  /**
-   * Returns the flattened list of all DOM nodes within the document.
-   * @param {boolean=} pierce Whether to pierce through shadow trees and iframes.
-   *     True by default.
-   * @return {Promise<Array<LH.Crdp.DOM.Node>>} The found nodes, or [], resolved in a promise
-   */
-  async getNodesInDocument(pierce = true) {
-    const flattenedDocument = await this.sendCommand('DOM.getFlattenedDocument',
-        {depth: -1, pierce});
-
-    return flattenedDocument.nodes ? flattenedDocument.nodes : [];
   }
 
   /**
